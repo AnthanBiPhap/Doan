@@ -101,7 +101,6 @@ const PostForm: React.FC<PostFormProps> = ({ onAddPost, onClose }) => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
 
-
       setTitle("");
       setContent("");
       setImageUrls([]);
@@ -117,8 +116,8 @@ const PostForm: React.FC<PostFormProps> = ({ onAddPost, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl h-[90vh] overflow-y-auto p-6">
+    <div className="fixed inset-0 bg-[#efe2db] bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-semibold mb-4">Tạo bài viết mới</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -164,9 +163,9 @@ const PostForm: React.FC<PostFormProps> = ({ onAddPost, onClose }) => {
               onChange={handleFileSelect}
               disabled={isLoading}
             />
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 h-32 overflow-y-auto">
               {imageUrls.map((url, index) => (
-                <div key={index} className="relative">
+                <div key={index} className="relative h-32">
                   <img src={url} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded" />
                   <button
                     type="button"
