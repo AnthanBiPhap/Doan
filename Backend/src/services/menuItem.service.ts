@@ -35,8 +35,12 @@ const getAllmenu_Item = async (query:any) => {
       .sort({...sortObject})
     .populate({
       path: 'comments',
-      select: 'content createdAt target_type'
-  }).populate('category_id');
+      select: 'content createdAt target_type',
+      populate: {
+        path: 'user_id',
+        select: 'username fullname'
+      }
+    }).populate('category_id');
   return {
     menu_Item,
     //Để phân trang

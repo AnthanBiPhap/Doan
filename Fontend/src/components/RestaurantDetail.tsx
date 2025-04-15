@@ -23,7 +23,11 @@ interface MenuItem {
 
 interface Comment {
   _id: string;
-  user_id: { username: string };
+  user_id: {
+    _id: string;
+    username: string;
+    fullname?: string;
+  };
   content: string;
   rating?: number;
   likeCount: number;
@@ -40,6 +44,7 @@ interface Restaurant {
   category_id: Category;
   average_rating: number;
   avatar_url: string;
+  images: string[]; // Thêm trường images
   comments: Comment[];
   menu_id: MenuItem[];
   is_active: boolean;
@@ -59,6 +64,7 @@ const RestaurantDetail: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // State cho carousel ảnh phụ
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -164,6 +170,14 @@ const RestaurantDetail: React.FC = () => {
     setDislikeCount(value);
   };
 
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? restaurant!.images.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) => (prev === restaurant!.images.length - 1 ? 0 : prev + 1));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -195,7 +209,7 @@ const RestaurantDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#efe2db]">
       {/* Hero Section */}
-      <div className="relative h-[400px] flex items-center justify-center bg-[#7c160f]">
+      <div className="relative h-[400px] flex items-center justify-center bg-[#0f6c7c]">
         <div className="text-center text-white">
           <h1 className="text-4xl font-bold mb-2">{restaurant.name}</h1>
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -221,7 +235,7 @@ const RestaurantDetail: React.FC = () => {
             <img
               src={restaurant.avatar_url || noImage}
               alt={restaurant.name}
-              className="w-full max-w-md h-auto object-contain rounded-lg shadow-lg"
+              className="w-full max-w-md h-auto object-contain rounded-lg shadow-lg mb-6"
               onError={(e) => {
                 e.currentTarget.src = noImage;
               }}
@@ -229,6 +243,76 @@ const RestaurantDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Additional Images Section */}
+      {restaurant.images?.length > 0 && (
+  <div className="container mx-auto px-4 py-6 max-w-3xl">
+    <h3 className="text-2xl font-bold text-[#1e0907] mb-4">Hình ảnh nhà hàng</h3>
+    <div className="relative rounded-2xl overflow-hidden">
+      <img
+        src={restaurant.images[currentImageIndex] || noImage}
+        alt={`Hình ảnh nhà hàng ${currentImageIndex + 1}`}
+        className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+        onError={(e) => {
+          e.currentTarget.src = noImage;
+        }}
+      />
+      {restaurant.images.length > 1 && (
+        <>
+          <button
+            onClick={handlePrevImage}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={handleNextImage}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {restaurant.images.map((_, index) => (
+              <span
+                key={index}
+                className={`h-2 w-2 rounded-full ${
+                  index === currentImageIndex ? "bg-white" : "bg-white/50"
+                }`}
+              ></span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
 
       {/* Content Section */}
       <div className="container mx-auto px-4 py-12">
@@ -411,26 +495,29 @@ const RestaurantDetail: React.FC = () => {
                 restaurant.comments.map((comment: Comment) => (
                   <div key={comment._id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold">{comment.user_id?.username || "Người dùng"}</span>
+                      <span className="font-semibold">
+                        {typeof comment.user_id === 'string' ? 'Người dùng ẩn danh' : 
+                          comment.user_id?.username || comment.user_id?.fullname || 'Người dùng ẩn danh'}
+                      </span>
                       <span className="text-sm text-gray-500">
                         {new Date(comment.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     {comment.rating ? (
                       <div className="flex items-center gap-2 mb-2">
-                      {typeof comment.rating === "number" ? (
-                        [...Array(5)].map((_, index) => (
-                          <FaStar
-                            key={index}
-                            className={`${
-                              index < comment.rating! ? "text-yellow-400" : "text-gray-300"
-                            }`}
-                          />
-                        ))
-                      ) : (
-                        <p className="text-gray-500">Chưa có đánh giá sao</p>
-                      )}
-                    </div>
+                        {typeof comment.rating === "number" ? (
+                          [...Array(5)].map((_, index) => (
+                            <FaStar
+                              key={index}
+                              className={`${
+                                index < comment.rating! ? "text-yellow-400" : "text-gray-300"
+                              }`}
+                            />
+                          ))
+                        ) : (
+                          <p className="text-gray-500">Chưa có đánh giá sao</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-gray-500 mb-2">Chưa có đánh giá sao</p>
                     )}
@@ -454,4 +541,4 @@ const RestaurantDetail: React.FC = () => {
   );
 };
 
-export default RestaurantDetail;
+export default RestaurantDetail

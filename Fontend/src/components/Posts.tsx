@@ -217,7 +217,7 @@ const Posts: React.FC = () => {
           </div>
         )}
 
-        {/* Post form
+        {/* Post form */}
         {showForm && (
           <motion.div
             className="mb-8 bg-white p-6 rounded-lg shadow-md"
@@ -239,7 +239,7 @@ const Posts: React.FC = () => {
               </p>
             )}
           </motion.div>
-        )} */}
+        )}
 
         {/* Posts grid */}
         {loading ? (

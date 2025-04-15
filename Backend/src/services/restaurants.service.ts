@@ -11,7 +11,12 @@ const getRestaurantById = async (id: string) => {
       .populate('menu_id')
       .populate('owner_id')
       .populate('category_id')
-      .populate('comments');
+      .populate('comments', null, null, {
+        populate: {
+          path: 'user_id',
+          select: 'username fullname'
+        }
+      });
   
   if (!restaurant) {
       throw createError(404, "Restaurant not found");
@@ -51,7 +56,12 @@ console.log("Fetching restaurants with query:", query);
       .populate('menu_id')
       .populate('owner_id')
       .populate('category_id')
-      .populate('comments');
+      .populate('comments', null, null, {
+        populate: {
+          path: 'user_id',
+          select: 'username fullname'
+        }
+      });
       return {
         restaurants,
         //Để phân trang
@@ -98,7 +108,12 @@ const createrestaurant = async (payload: any) => {
       .populate('menu_id')
       .populate('owner_id')
       .populate('category_id')
-      .populate('comments');
+      .populate('comments', null, null, {
+        populate: {
+          path: 'user_id',
+          select: 'username fullname'
+        }
+      });
 
     return populatedRestaurant;
   } catch (error) {

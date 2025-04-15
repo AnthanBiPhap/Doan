@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
-// Comment interface aligned with API response
+// Cập nhật interface Comment để phản ánh đúng cấu trúc từ API
 interface Comment {
   _id: string;
+  menu_id: string;
+  user_id: { 
+    _id: string;
+    username: string; 
+    fullname: string; 
+  };
   content: string;
+  likeCount: number;
+  dislikeCount: number;
   createdAt: string;
-  user_id?: { username: string; fullname?: string }; // Optional to handle missing user_id
-  likeCount?: number; // Optional to handle missing likeCount
-  dislikeCount?: number; // Optional to handle missing dislikeCount
+  updatedAt: string;
 }
 
 interface MenuItem {
@@ -24,7 +30,7 @@ interface MenuItem {
   };
   restaurant_id: string;
   createdAt: string;
-  comments: Comment[]; // Comments included in MenuItem response
+  comments: Comment[];
 }
 
 const MenuItemDetail = () => {
@@ -47,7 +53,33 @@ const MenuItemDetail = () => {
         setLoading(true);
         const menuResponse = await axios.get(`http://localhost:8080/api/v1/menu_item/${id}`);
         console.log('Menu response:', menuResponse.data);
-        setMenuItem(menuResponse.data.data);
+        
+        // Nếu dữ liệu comments không đầy đủ, thử fetch thêm comments
+        if (menuResponse.data.data && (!menuResponse.data.data.comments || 
+            menuResponse.data.data.comments.some(c => !c.likeCount && !c.dislikeCount))) {
+          try {
+            const commentsResponse = await axios.get(`http://localhost:8080/api/v1/commentMenu`);
+            console.log('Comments response:', commentsResponse.data);
+            
+            // Lọc comments cho món ăn hiện tại
+            const menuComments = commentsResponse.data.data.comments.filter(
+              (comment: Comment) => comment.menu_id === id
+            );
+            
+            // Cập nhật dữ liệu món ăn với comments đầy đủ
+            const updatedMenuItem = {
+              ...menuResponse.data.data,
+              comments: menuComments
+            };
+            
+            setMenuItem(updatedMenuItem);
+          } catch (commentsError) {
+            console.error('Error fetching comments:', commentsError);
+            setMenuItem(menuResponse.data.data);
+          }
+        } else {
+          setMenuItem(menuResponse.data.data);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         setMenuItem(null);
@@ -86,8 +118,8 @@ const MenuItemDetail = () => {
         menu_id: id,
         user_id: currentUser._id,
         content: commentContent.trim(),
-        likeCount: likeCount || 0, // Ensure 0 if not provided
-        dislikeCount: dislikeCount || 0, // Ensure 0 if not provided
+        likeCount: likeCount || 0,
+        dislikeCount: dislikeCount || 0,
       };
 
       await axios.post(`http://localhost:8080/api/v1/commentMenu`, payload, {
@@ -97,9 +129,21 @@ const MenuItemDetail = () => {
         },
       });
 
-      // Refresh menu item data to get updated comments
-      const menuResponse = await axios.get(`http://localhost:8080/api/v1/menu_item/${id}`);
-      setMenuItem(menuResponse.data.data);
+      // Tải lại comments mới nhất
+      const commentsResponse = await axios.get(`http://localhost:8080/api/v1/commentMenu`);
+      const menuComments = commentsResponse.data.data.comments.filter(
+        (comment: Comment) => comment.menu_id === id
+      );
+      
+      // Cập nhật state để hiển thị comments mới
+      if (menuItem) {
+        setMenuItem({
+          ...menuItem,
+          comments: menuComments
+        });
+      }
+      
+      // Reset form
       setCommentContent('');
       setLikeCount(0);
       setDislikeCount(0);
@@ -247,32 +291,37 @@ const MenuItemDetail = () => {
             </div>
           </div>
 
-          {/* Danh sách đánh giá */}
+          {/* Danh sách đánh giá - Đã cập nhật để hiển thị đầy đủ thông tin */}
           <div className="space-y-4">
             {menuItem.comments && menuItem.comments.length > 0 ? (
-              menuItem.comments.map((comment) => (
-                <div key={comment._id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">
-                      {comment.user_id?.fullname || comment.user_id?.username || 'Người dùng'}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-700">{comment.content}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#7c160f]">
-                        👍 {comment.likeCount ?? 0}
-                      </span>
+              menuItem.comments.map((comment) => {
+                // Kiểm tra dữ liệu comment
+                const username = comment.user_id?.username || "Người dùng ẩn danh";
+                
+                return (
+                  <div key={comment._id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold">{username}</span>
                       <span className="text-sm text-gray-500">
-                        👎 {comment.dislikeCount ?? 0}
+                        {new Date(comment.createdAt).toLocaleDateString()}
                       </span>
                     </div>
+                    <p className="text-gray-700">{comment.content}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-[#7c160f]">
+                          👍 {comment.likeCount || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-gray-500">
+                          👎 {comment.dislikeCount || 0}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-center text-gray-500">Chưa có đánh giá nào</p>
             )}

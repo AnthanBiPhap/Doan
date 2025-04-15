@@ -28,9 +28,31 @@ interface Restaurant {
   owner_id: { _id: string }
 }
 
+interface Post {
+  _id: string
+  user_id: {
+    _id: string
+    username: string
+    fullname: string
+    avatar: string
+  }
+  title: string
+  content: string
+  images: string[]
+  restaurant_id: string
+  is_active: boolean
+  likes: string[]
+  comments: string[]
+  viewCount: number
+  likeCount: number
+  createdAt: string
+  updatedAt: string
+}
+
 const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null)
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -47,6 +69,7 @@ const UserProfile: React.FC = () => {
         if (userData.role === "restaurant_owner") {
           fetchUserRestaurants(userData._id)
         }
+        fetchUserPosts(userData._id)
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng:", error)
       } finally {
@@ -61,10 +84,23 @@ const UserProfile: React.FC = () => {
     try {
       const response = await fetch(`http://localhost:8080/api/v1/restaurants`)
       const data = await response.json()
-      const userRestaurants = data.restaurants.filter((restaurant: Restaurant) => restaurant.owner_id._id === userId)
+      const userRestaurants = data.restaurants.filter(
+        (restaurant: Restaurant) => restaurant.owner_id._id === userId
+      )
       setRestaurants(userRestaurants)
     } catch (error) {
       console.error("Error fetching restaurants:", error)
+    }
+  }
+
+  const fetchUserPosts = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/posts`)
+      const data = await response.json()
+      const userPosts = data.data.posts.filter((post: Post) => post.user_id._id === userId)
+      setPosts(userPosts)
+    } catch (error) {
+      console.error("Error fetching posts:", error)
     }
   }
 
@@ -102,15 +138,13 @@ const UserProfile: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Profile Card */}
         <div className="bg-white rounded-3xl shadow-md overflow-hidden mb-10">
-          {/* Banner with gradient overlay */}
           <div className="h-40 sm:h-56 bg-gradient-to-r from-rose-300 to-rose-300 relative">
             <div className="absolute inset-0 backdrop-blur-sm"></div>
             <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/10 to-transparent"></div>
           </div>
-          
+
           <div className="px-5 sm:px-8 pb-8 relative">
             <div className="flex flex-col sm:flex-row sm:items-end -mt-16 sm:-mt-24 mb-6">
-              {/* Avatar with animated hover effect */}
               <div className="relative z-10 mx-auto sm:mx-0">
                 <div className="h-32 w-32 sm:h-44 sm:w-44 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white relative group">
                   <div className="absolute inset-0 bg-gradient-to-b group-hover:opacity-0 transition-opacity duration-300 z-10"></div>
@@ -120,8 +154,7 @@ const UserProfile: React.FC = () => {
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 </div>
-                
-                {/* Status badge positioned on avatar */}
+
                 <div className="absolute bottom-3 -right-6">
                   {user.active ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 shadow-sm">
@@ -136,10 +169,11 @@ const UserProfile: React.FC = () => {
                   )}
                 </div>
               </div>
-              
-              {/* User info */}
+
               <div className="mt-6 sm:mt-0 sm:ml-8 text-center sm:text-left">
-                <h1 className="text-2xl sm:text-3xl lg:text-2xl font-bold text-gray-900 mt-24">{user.fullname}</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-2xl font-bold text-gray-900 mt-24">
+                  {user.fullname}
+                </h1>
                 <p className="text-gray-500 mb-2">@{user.username}</p>
                 <p className="inline-block bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-sm font-medium">
                   {user.role.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
@@ -147,20 +181,40 @@ const UserProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* User Details Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Personal Information Card */}
               <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  <svg
+                    className="w-5 h-5 mr-2 text-rose-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    ></path>
                   </svg>
                   Thông Tin Cá Nhân
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center p-3 bg-white rounded-xl">
-                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    <svg
+                      className="w-5 h-5 text-gray-400 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      ></path>
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">Email</p>
@@ -168,8 +222,19 @@ const UserProfile: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center p-3 bg-white rounded-xl">
-                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    <svg
+                      className="w-5 h-5 text-gray-400 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      ></path>
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">Vai trò</p>
@@ -181,18 +246,39 @@ const UserProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Account Information Card */}
               <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  <svg
+                    className="w-5 h-5 mr-2 text-rose-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    ></path>
                   </svg>
                   Thông Tin Tài Khoản
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center p-3 bg-white rounded-xl">
-                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <svg
+                      className="w-5 h-5 text-gray-400 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      ></path>
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">Ngày tạo tài khoản</p>
@@ -206,8 +292,19 @@ const UserProfile: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center p-3 bg-white rounded-xl">
-                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    <svg
+                      className="w-5 h-5 text-gray-400 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      ></path>
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">Cập nhật gần nhất</p>
@@ -228,7 +325,7 @@ const UserProfile: React.FC = () => {
 
         {/* Restaurants Section */}
         {user.role === "restaurant_owner" && (
-          <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-md overflow-hidden mb-10">
             <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-white">Nhà Hàng Của Tôi</h2>
@@ -275,7 +372,9 @@ const UserProfile: React.FC = () => {
                             >
                               {restaurant.is_active ? "Đang hoạt động" : "Đã đóng cửa"}
                             </span>
-                            <span className="text-xs ml-2 opacity-90">{restaurant.category_id.category_name}</span>
+                            <span className="text-xs ml-2 opacity-90">
+                              {restaurant.category_id.category_name}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -324,7 +423,6 @@ const UserProfile: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Menu Preview */}
                         {restaurant.menu_id.length > 0 && (
                           <div className="bg-gray-50 rounded-xl p-3 mt-3">
                             <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
@@ -346,7 +444,10 @@ const UserProfile: React.FC = () => {
                             </h4>
                             <div className="space-y-2">
                               {restaurant.menu_id.slice(0, 3).map((menuItem) => (
-                                <div key={menuItem._id} className="flex justify-between items-center bg-white p-2 rounded-lg">
+                                <div
+                                  key={menuItem._id}
+                                  className="flex justify-between items-center bg-white p-2 rounded-lg"
+                                >
                                   <span className="text-xs text-gray-600 truncate">{menuItem.name}</span>
                                   <span className="text-xs font-medium text-rose-600 ml-2">
                                     {menuItem.price.toLocaleString("vi-VN")} ₫
@@ -375,15 +476,31 @@ const UserProfile: React.FC = () => {
                               viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
                             </svg>
                           </Link>
                           <Link
                             to={`/edit-restaurant/${restaurant._id}`}
                             className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
                           >
-                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            <svg
+                              className="h-4 w-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              ></path>
                             </svg>
                             Quản lý
                           </Link>
@@ -412,7 +529,9 @@ const UserProfile: React.FC = () => {
                       </svg>
                     </div>
                     <h3 className="text-xl font-medium text-gray-900 mb-3">Chưa có nhà hàng nào</h3>
-                    <p className="text-gray-600 mb-8">Bạn chưa thêm nhà hàng nào vào tài khoản của mình</p>
+                    <p className="text-gray-600 mb-8">
+                      Bạn chưa thêm nhà hàng nào vào tài khoản của mình
+                    </p>
                     <Link
                       to="/add-restaurant"
                       className="inline-flex items-center px-6 py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
@@ -434,6 +553,204 @@ const UserProfile: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Posts Section */}
+        <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-2xl font-bold text-white">Bài Đăng Của Tôi</h2>
+              <Link
+                to="/add-post"
+                className="inline-flex items-center px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Thêm bài đăng
+              </Link>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            {posts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {posts.map((post) => (
+                  <div
+                    key={post._id}
+                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    <div className="aspect-video relative overflow-hidden group">
+                      {post.images.length > 0 ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={post.images[0]}
+                            alt={post.title}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          {post.images.length > 1 && (
+                            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                              +{post.images.length - 1}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10"></div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500 text-sm">Không có hình ảnh</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 w-full p-4 text-white z-20">
+                        <h3 className="text-xl font-bold mb-1 drop-shadow-md truncate">
+                          {post.title}
+                        </h3>
+                        <div className="flex items-center">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              post.is_active ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                            }`}
+                          >
+                            {post.is_active ? "Đang hoạt động" : "Đã ẩn"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <p className="text-sm text-gray-600 line-clamp-3 mb-3">{post.content}</p>
+                      <div className="flex justify-between text-xs text-gray-500 mb-4">
+                        <div className="flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          {post.viewCount} lượt xem
+                        </div>
+                        <div className="flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                          </svg>
+                          {post.likeCount} lượt thích
+                        </div>
+                        <div className="flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5v-4a2 2 0 012-2h10a2 2 0 012 2v4h-4m-6 0h6"
+                            />
+                          </svg>
+                          {post.comments.length} bình luận
+                        </div>
+                      </div>
+                      <div className="flex justify-between border-t border-gray-100 pt-3">
+                        <Link
+                          to={`/posts/${post._id}`}
+                          className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center"
+                        >
+                          Xem chi tiết
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 ml-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-xl">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center shadow-inner">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-12 w-12 text-rose-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-3">Chưa có bài đăng nào</h3>
+                  <p className="text-gray-600 mb-8">
+                    Bạn chưa đăng bài nào. Hãy tạo bài đăng đầu tiên của bạn!
+                  </p>
+                  <Link
+                    to="/add-post"
+                    className="inline-flex items-center px-6 py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Thêm bài đăng mới
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
