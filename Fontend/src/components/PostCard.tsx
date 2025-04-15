@@ -74,6 +74,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const defaultAvatar = "https://via.placeholder.com/40";
 
@@ -267,13 +268,61 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           )}
 
           {/* Hình ảnh */}
-          {post.images[0] && (
+          {post.images.length > 0 && (
             <div className="mb-4">
-              <img
-                src={post.images[0]}
-                alt={post.title}
-                className="w-full h-64 object-cover rounded-lg"
-              />
+              <div 
+                className="relative w-full h-64 rounded-lg overflow-hidden cursor-pointer"
+                onClick={() => setShowImageModal(true)}
+              >
+                <div className="grid grid-cols-2 gap-2 h-full">
+                  {post.images.slice(0, 4).map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`${post.title} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ))}
+                </div>
+                {post.images.length > 4 && (
+                  <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                    +{post.images.length - 4}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Modal hiển thị ảnh */}
+          {showImageModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto p-4">
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => setShowImageModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {post.images.map((image, index) => (
+                    <div 
+                      key={index}
+                      className="relative group"
+                    >
+                      <img
+                        src={image}
+                        alt={`${post.title} ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white">Xem ảnh</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

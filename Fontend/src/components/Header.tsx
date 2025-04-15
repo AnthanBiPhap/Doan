@@ -167,7 +167,7 @@ export default function Header() {
                 </Link>
                 {user.role === "restaurant_owner" && (
                   <Link
-                    to="/add-restaurant"
+                    to="/restaurants"
                     className="text-[#1e0907] hover:text-[#bb6f57] font-medium"
                     onClick={toggleMenu}
                   >

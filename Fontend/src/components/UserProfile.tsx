@@ -233,7 +233,7 @@ const UserProfile: React.FC = () => {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-white">Nhà Hàng Của Tôi</h2>
                 <Link
-                  to="/add-restaurant"
+                  to="/restaurants"
                   className="inline-flex items-center px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
                 >
                   <svg

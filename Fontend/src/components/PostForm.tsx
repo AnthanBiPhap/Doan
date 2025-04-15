@@ -118,7 +118,7 @@ const PostForm: React.FC<PostFormProps> = ({ onAddPost, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl p-6">
+      <div className="bg-white rounded-lg w-full max-w-2xl h-[90vh] overflow-y-auto p-6">
         <h2 className="text-2xl font-semibold mb-4">Tạo bài viết mới</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
