@@ -48,6 +48,8 @@ const Restaurants: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,20 +82,46 @@ const Restaurants: React.FC = () => {
     fetchRestaurants();
   }, []);
 
-  // Lọc nhà hàng theo tìm kiếm và danh mục
-  const filteredRestaurants = restaurants.filter((restaurant) => {
-    const matchesSearch =
-      restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      restaurant.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" ||
-      restaurant.category_id?.category_name === selectedCategory;
-    return restaurant.is_active && matchesSearch && matchesCategory;
-  });
+  // Lọc và sắp xếp nhà hàng
+  const filteredRestaurants = restaurants
+    .filter((restaurant) => {
+      const matchesSearch =
+        restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        restaurant.address.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" ||
+        restaurant.category_id?.category_name === selectedCategory;
+      const matchesRating =
+        !selectedRating ||
+        restaurant.average_rating >= selectedRating;
+      return restaurant.is_active && matchesSearch && matchesCategory && matchesRating;
+    })
+    .sort((a, b) => {
+      if (selectedSort === "rating") {
+        return b.average_rating - a.average_rating;
+      } else if (selectedSort === "name") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.average_rating - a.average_rating;
+      }
+    });
 
-  // Danh sách danh mục giả lập
+  // Danh sách danh mục và xếp hạng
   const categories = [
     { value: "all", label: "Tất Cả" },
+  ];
+
+  const ratings = [
+    { value: 5, label: "5 sao" },
+    { value: 4, label: "4 sao trở lên" },
+    { value: 3, label: "3 sao trở lên" },
+    { value: 2, label: "2 sao trở lên" },
+    { value: 1, label: "1 sao trở lên" },
+  ];
+
+  const sorts = [
+    { value: "rating", label: "Đánh giá" },
+    { value: "name", label: "Tên nhà hàng" },
   ];
 
   // Callback khi thêm nhà hàng thành công
@@ -144,6 +172,40 @@ const Restaurants: React.FC = () => {
                 {categories.map((category) => (
                   <option key={category.value} value={category.value}>
                     {category.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="w-full sm:w-48">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#7c160f]" />
+              <select
+                value={selectedRating || ''}
+                onChange={(e) => setSelectedRating(e.target.value ? Number(e.target.value) : null)}
+                className="w-full p-3 pl-10 rounded-lg border border-[#bb6f57] focus:outline-none focus:ring-2 focus:ring-[#bb6f57] bg-white text-[#1e0907]"
+              >
+                <option value="">Tất cả đánh giá</option>
+                {ratings.map((rating) => (
+                  <option key={rating.value} value={rating.value}>
+                    {rating.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="w-full sm:w-48">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#7c160f]" />
+              <select
+                value={selectedSort || ''}
+                onChange={(e) => setSelectedSort(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-[#bb6f57] focus:outline-none focus:ring-2 focus:ring-[#bb6f57] bg-white text-[#1e0907]"
+              >
+                <option value="">Sắp xếp theo</option>
+                {sorts.map((sort) => (
+                  <option key={sort.value} value={sort.value}>
+                    {sort.label}
                   </option>
                 ))}
               </select>
