@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -47,7 +45,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
 
   const [showAllRestaurants, setShowAllRestaurants] = useState(false);
-  const [showAllPosts, setShowAllPosts] = useState(false);
+  const [showAllMenuItems, setShowAllMenuItems] = useState(false);
 
   const navigate = useNavigate();
 
@@ -75,12 +73,10 @@ const HomePage = () => {
     fetchData();
   }, []);
 
-  const getPostImageUrl = (post: Post) => {
-    return post.image_url || (post.images?.[0] || "https://via.placeholder.com/300x200");
-  };
-
   const SectionTitle = ({ title }: { title: string }) => (
-    <h2 className="text-3xl font-bold text-center mb-6 text-primary">{title}</h2>
+    <h2 className="text-4xl font-extrabold text-center mb-8 text-primary">
+      {title}
+    </h2>
   );
 
   const Placeholder = ({ count }: { count: number }) => (
@@ -90,7 +86,7 @@ const HomePage = () => {
         .map((_, index) => (
           <div
             key={index}
-            className="animate-pulse bg-gray-200 h-48 w-80 rounded-lg shadow-md"
+            className="animate-pulse bg-gray-200 h-48 w-80 rounded-lg shadow-lg"
           ></div>
         ))}
     </div>
@@ -98,21 +94,34 @@ const HomePage = () => {
 
   return (
     <div className="w-full bg-gray-50">
-      <section className="py-12">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 py-20 text-center text-white">
+        <h1 className="text-5xl font-bold mb-4">Khám Phá Hương Vị Tuyệt Vời</h1>
+        <p className="text-xl mb-6">Cùng thưởng thức những món ăn và địa điểm đáng nhớ nhất.</p>
+        <button
+          onClick={() => navigate("/restaurants")}
+          className="bg-white text-indigo-600 px-6 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl transition duration-300"
+        >
+          Khám phá ngay
+        </button>
+      </section>
+
+      {/* Featured Restaurants */}
+      <section className="py-16">
         <div className="container mx-auto px-4 lg:px-8">
           <SectionTitle title="Nhà Hàng Nổi Bật" />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
           >
             {loading ? (
               <Placeholder count={4} />
             ) : (showAllRestaurants ? restaurants : restaurants.slice(0, 4)).map((restaurant) => (
               <div
                 key={restaurant._id}
-                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white rounded-xl shadow-lg p-4 hover:shadow-2xl transition-shadow cursor-pointer"
                 onClick={() => navigate(`/restaurants/${restaurant._id}`)}
               >
                 <img
@@ -121,9 +130,9 @@ const HomePage = () => {
                     "https://via.placeholder.com/150"
                   }
                   alt={restaurant.name}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-56 object-cover rounded-xl"
                 />
-                <h3 className="mt-4 text-xl font-semibold text-gray-700">
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">
                   {restaurant.name}
                 </h3>
                 {restaurant.category_id && (
@@ -135,7 +144,7 @@ const HomePage = () => {
             ))}
           </motion.div>
           {!loading && restaurants.length > 4 && (
-            <div className="text-center mt-6">
+            <div className="text-center mt-8">
               <button
                 onClick={() => setShowAllRestaurants(!showAllRestaurants)}
                 className="text-primary font-semibold hover:underline"
@@ -147,88 +156,53 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="py-12 bg-primary-light">
+      {/* Featured Menu Items */}
+      <section className="py-16">
         <div className="container mx-auto px-4 lg:px-8">
-          <SectionTitle title="Bài Viết Nổi Bật" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <SectionTitle title="Món Ăn Nổi Bật" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+          >
             {loading ? (
-              <Placeholder count={3} />
-            ) : (showAllPosts ? posts : posts.slice(0, 3)).map((post) => (
+              <Placeholder count={4} />
+            ) : (showAllMenuItems ? menuItems : menuItems.slice(0, 4)).map((item) => (
               <div
-                key={post._id}
-                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate(`/post/${post._id}`)}
+                key={item._id}
+                className="bg-white rounded-xl shadow-lg p-4 hover:shadow-2xl transition-shadow cursor-pointer"
+                onClick={() => navigate(`/menu_item/${item._id}`)}
               >
                 <img
-                  src={getPostImageUrl(post)}
-                  alt={post.title}
-                  className="w-full h-48 object-cover rounded-lg"
+                  src={item.main_image_url || "https://via.placeholder.com/300x200"}
+                  alt={item.name}
+                  className="w-full h-48 object-cover rounded-xl"
                 />
-                <h3 className="mt-4 text-lg font-semibold text-gray-700">
-                  {post.title}
+                <h3 className="mt-4 text-lg font-semibold text-gray-800">
+                  {item.name}
                 </h3>
                 <p className="mt-2 text-sm text-gray-500">
-                  {post.content?.slice(0, 100)}...
+                  {item.description.slice(0, 50)}...
+                </p>
+                <p className="mt-2 text-lg font-bold text-indigo-600">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(item.price)}
                 </p>
               </div>
             ))}
-          </div>
-          {!loading && posts.length > 3 && (
-            <div className="text-center mt-6">
+          </motion.div>
+          {!loading && menuItems.length > 4 && (
+            <div className="text-center mt-8">
               <button
-                onClick={() => setShowAllPosts(!showAllPosts)}
+                onClick={() => setShowAllMenuItems(!showAllMenuItems)}
                 className="text-primary font-semibold hover:underline"
               >
-                {showAllPosts ? "Thu gọn" : "Xem thêm"}
+                {showAllMenuItems ? "Thu gọn" : "Xem thêm"}
               </button>
             </div>
-          )}
-        </div>
-      </section>
-
-      <section className="py-12">
-        <div className="container mx-auto px-4 lg:px-8">
-          <SectionTitle title="Món Ăn Nổi Bật" />
-          {loading ? (
-            <Placeholder count={3} />
-          ) : menuItems.length ? (
-            <Swiper
-              slidesPerView={1}
-              spaceBetween={15}
-              loop
-              autoplay={{ delay: 3000 }}
-              breakpoints={{
-                640: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
-              }}
-              className="my-8"
-            >
-              {menuItems.map((item) => (
-                <SwiperSlide key={item._id}>
-                  <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/menu_item/${item._id}`)}>
-                    <img
-                      src={item.main_image_url || "https://via.placeholder.com/300x200"}
-                      alt={item.name}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <h3 className="mt-4 text-lg font-semibold text-gray-700">
-                      {item.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-500">
-                      {item.description.slice(0, 50)}...
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-primary">
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(item.price)}
-                    </p>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          ) : (
-            <p className="text-center text-gray-500">Không đủ món ăn để hiển thị.</p>
           )}
         </div>
       </section>

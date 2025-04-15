@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+// Comment interface aligned with API response
 interface Comment {
   _id: string;
-  user_id: { username: string; fullname?: string };
   content: string;
-  likeCount: number;
-  dislikeCount: number;
   createdAt: string;
+  user_id?: { username: string; fullname?: string }; // Optional to handle missing user_id
+  likeCount?: number; // Optional to handle missing likeCount
+  dislikeCount?: number; // Optional to handle missing dislikeCount
 }
 
 interface MenuItem {
@@ -23,12 +24,12 @@ interface MenuItem {
   };
   restaurant_id: string;
   createdAt: string;
+  comments: Comment[]; // Comments included in MenuItem response
 }
 
 const MenuItemDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]); // State riêng cho comments
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState('');
   const [likeCount, setLikeCount] = useState(0);
@@ -37,26 +38,19 @@ const MenuItemDetail = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
 
-  // Fetch dữ liệu menu và comments
+  // Fetch menu item data (including comments)
   useEffect(() => {
     const fetchData = async () => {
+      if (!id) return;
+
       try {
         setLoading(true);
-        // Gọi song song hai API
-        const [menuResponse, commentResponse] = await Promise.all([
-          axios.get(`http://localhost:8080/api/v1/menu_item/${id}`),
-          axios.get(`http://localhost:8080/api/v1/commentMenu?menu_id=${id}`),
-        ]);
-
+        const menuResponse = await axios.get(`http://localhost:8080/api/v1/menu_item/${id}`);
         console.log('Menu response:', menuResponse.data);
-        console.log('Comment response:', commentResponse.data);
-
         setMenuItem(menuResponse.data.data);
-        setComments(commentResponse.data.data.comments || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         setMenuItem(null);
-        setComments([]);
       } finally {
         setLoading(false);
       }
@@ -67,12 +61,10 @@ const MenuItemDetail = () => {
       setCurrentUser(JSON.parse(userProfile));
     }
 
-    if (id) {
-      fetchData();
-    }
+    fetchData();
   }, [id]);
 
-  // Xử lý gửi comment
+  // Handle comment submission
   const handleSubmitComment = async () => {
     if (!commentContent.trim()) {
       setSubmitError('Vui lòng nhập nội dung đánh giá');
@@ -94,8 +86,8 @@ const MenuItemDetail = () => {
         menu_id: id,
         user_id: currentUser._id,
         content: commentContent.trim(),
-        likeCount,
-        dislikeCount,
+        likeCount: likeCount || 0, // Ensure 0 if not provided
+        dislikeCount: dislikeCount || 0, // Ensure 0 if not provided
       };
 
       await axios.post(`http://localhost:8080/api/v1/commentMenu`, payload, {
@@ -105,11 +97,9 @@ const MenuItemDetail = () => {
         },
       });
 
-      // Lấy lại danh sách comments mới nhất
-      const commentResponse = await axios.get(
-        `http://localhost:8080/api/v1/commentMenu?menu_id=${id}`
-      );
-      setComments(commentResponse.data.data.comments || []);
+      // Refresh menu item data to get updated comments
+      const menuResponse = await axios.get(`http://localhost:8080/api/v1/menu_item/${id}`);
+      setMenuItem(menuResponse.data.data);
       setCommentContent('');
       setLikeCount(0);
       setDislikeCount(0);
@@ -194,8 +184,6 @@ const MenuItemDetail = () => {
           </div>
         )}
 
-       
-
         {/* Phần đánh giá */}
         <div className="mt-12">
           <h3 className="text-xl font-bold text-[#1e0907] mb-4">Đánh giá món ăn</h3>
@@ -261,8 +249,8 @@ const MenuItemDetail = () => {
 
           {/* Danh sách đánh giá */}
           <div className="space-y-4">
-            {comments.length > 0 ? (
-              comments.map((comment) => (
+            {menuItem.comments && menuItem.comments.length > 0 ? (
+              menuItem.comments.map((comment) => (
                 <div key={comment._id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">
